@@ -3,3 +3,5 @@
 .nprel-port
 .lsp/
 .clj-kondo/
+alda-player.exe
+*.exe
