@@ -15,7 +15,7 @@
 (defn makeChild [pop case]
   [])
 
-(defn run [popsize numgen numnotes]
+(defn run [popsize numgen numnotes cases]
   (loop [curGen 0
          pop (sort better (repeatedly popsize #(getNewIndividual numnotes cases)))]
     (let [best (first pop)]
