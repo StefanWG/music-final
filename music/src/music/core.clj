@@ -49,6 +49,9 @@
         newSeq
         (recur newSeq (first notes) (rest notes) (:octave curNote))))))
 
-(play! (toAlda hcb))
+(defn play [melody]
+  "Play a melody"
+  (play! (toAlda melody)))
+
 
 
