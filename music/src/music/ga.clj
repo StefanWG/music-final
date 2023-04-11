@@ -11,6 +11,14 @@
 (defn tournamentSelection [pop n]
   (first (sort better (repeatedly n (rand-nth pop)))))
 
+(defn lexicaseSelection [pop]
+  (loop [survivors pop
+         cases (shuffle (range (count (:errors (first pop)))))]
+    (if (or (empty? cases) (empty? (rest survivors)))
+      (rand-nth survivors)
+      (let [minErr (apply min (map #(nth % (first cases)) (map :errors survivors)))]
+        (recur (filter #(= minErr (nth (:errors %) (first cases))) survivors) (rest cases))))))
+
 ;;TODO: use some combination of crossover, selection and mutation
 (defn makeChild [pop case]
   [])
