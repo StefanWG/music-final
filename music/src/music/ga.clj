@@ -1,5 +1,5 @@
-(ns music.ga 
-  (:require [music.core :refer :all]))
+(ns music.ga)
+(require '[music.core :refer :all])
 
 (def cases [])
 
@@ -19,9 +19,22 @@
       (let [minErr (apply min (map #(nth % (first cases)) (map :errors survivors)))]
         (recur (filter #(= minErr (nth (:errors %) (first cases))) survivors) (rest cases))))))
 
+(defn select [pop]
+  (lexicaseSelection pop))
+
+(defn mutate [genome]
+  genome)
+
+(defn crossover [p1 p2]
+  p1)
+
 ;;TODO: use some combination of crossover, selection and mutation
-(defn makeChild [pop case]
-  [])
+(defn makeChild [pop cases]
+  (let [parent1 (:genome (select pop))
+        parent2 (:genome (select pop))
+        newGenome (mutate (crossover parent1 parent2))]
+    {:genome newGenome
+     :errors (errors newGenome cases)}))
 
 (defn run [popsize numgen numnotes cases]
   (loop [curGen 0
