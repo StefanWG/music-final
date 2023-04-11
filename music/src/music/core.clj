@@ -69,7 +69,7 @@
 
 ;;NOTE: The individual will have a length at least as large as numNotes
 ;; but it can be up to 3.5 beats larger
-(defn getNewIndividual [numNotes] ;;In terms of quarters notes
+(defn getNewGenome [numNotes] ;;In terms of quarters notes
   (loop [notesLeft numNotes
          melody []]
     (if (<= notesLeft 0)
@@ -79,5 +79,15 @@
             octave (getRandomOctave)]
         (recur (- notesLeft (/ 4 noteSize)) (conj melody {:pitch pitch :duration noteSize :octave octave}))))))
 
+;;TODO How do we do this?
+(defn errors
+  "Calculate errors for a given genome"
+  [genome cases]
+  []) 
 
-(getNewIndividual 16)
+(defn getNewIndividual [numNotes cases]
+  (let [genome (getNewGenome numNotes)]
+    {:genome genome
+     :errors (errors genome cases)}))
+
+(getNewIndividual 16 [])
