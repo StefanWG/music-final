@@ -53,5 +53,31 @@
   "Play a melody"
   (play! (toAlda melody)))
 
+(defn getRandomNoteSize []
+  (let [n (rand)]
+    (cond
+      (< n 0.2) 8 ;;eigth note w prob 20%
+      (< n 0.6) 4 ;;quarter note w prob 40%
+      (< n 0.8) 2 ;;half note w prob 20%
+      :else 1))) ;;full note w prob 20%
+
+(defn getRandomPitch []
+  (rand-nth [:a :b :c :d :e :f :g]))
+
+(defn getRandomOctave[] 
+  (+ 1 (rand-int 8)))
+
+;;NOTE: The individual will have a length at least as large as numNotes
+;; but it can be up to 3.5 beats larger
+(defn getNewIndividual [numNotes] ;;In terms of quarters notes
+  (loop [notesLeft numNotes
+         melody []]
+    (if (<= notesLeft 0)
+      melody
+      (let [noteSize (getRandomNoteSize)
+            pitch (getRandomPitch)
+            octave (getRandomOctave)]
+        (recur (- notesLeft (/ 4 noteSize)) (conj melody {:pitch pitch :duration noteSize :octave octave}))))))
 
 
+(getNewIndividual 16)
