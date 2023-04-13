@@ -20,6 +20,8 @@
           {:pitch :a, :accidental :none, :duration 4, :octave 4},
           {:pitch :g, :accidental :none, :duration 2, :octave 4}])
 
+;;testing
+
 ;;TODO: check if note is sharp or flat 
 (defn isSharp [accidental]
   "Check if note is a sharp"
