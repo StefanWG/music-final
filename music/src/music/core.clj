@@ -20,7 +20,6 @@
           {:pitch :a, :duration 4, :octave 4},
           {:pitch :g, :duration 2, :octave 4}])
 
-
 (defn isRest [note]
   "Check if note is a rest note"
   (= "rest" (:pitch note)))
@@ -91,3 +90,6 @@
      :errors (errors genome cases)}))
 
 (getNewIndividual 16 [])
+
+(defn getlength "Returns binomial sum of length 10 w/ prob 0.5"
+  [] (reduce + (random-sample 0.5 [1 1 1 1 1 1 1 1 1 1])))
