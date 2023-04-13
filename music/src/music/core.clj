@@ -131,5 +131,7 @@
 
 (getNewIndividual 16 [])
 
-(defn getlength "Returns binomial sum of length 10 w/ prob 0.5"
-  [] (reduce + (random-sample 0.5 [1 1 1 1 1 1 1 1 1 1])))
+(defn getlength "Returns binomial sum of length n w/ prob 0.5"
+  [n] (reduce + (random-sample 0.5 (vec (replicate n 1))))))
+
+(getlength 100)
