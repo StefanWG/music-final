@@ -23,15 +23,15 @@
 ;;TODO: check if note is sharp or flat 
 (defn isSharp [accidental]
   "Check if note is a sharp"
-  (= "sharp" (:accidental accidental)))
+  (= :sharp (:accidental accidental)))
 
 (defn isFlat [accidental]
   "Check if note is a flat"
-  (= "flat" (:accidental accidental)))
+  (= :flat (:accidental accidental)))
 
 (defn isRest [note]
   "Check if note is a rest note"
-  (= "rest" (:pitch note)))
+  (= note -1))
 
 (defn getOctaveChange [prevOctave nextOctave]
   "Get alda code for octave change between previous note and current note"
@@ -41,44 +41,32 @@
       (> n 0) (repeat n (octave :down))
       :else [])))
 
-;;org version without accidentals 
-;; (defn toAlda [melody]
-;;   "Convert melody in form of [{:pitch :duration : octave}] to alda"
-;;   (loop [seq [(part "piano")
-;;               (octave (:octave (first melody)))]
-;;          curNote (first melody)
-;;          notes (rest melody)
-;;          prevOctave (:octave (first melody))]
-;;     (let [octaveChange (getOctaveChange prevOctave (:octave curNote)) ;; get necessary octave changes
-;;           newNote (if (isRest curNote) ;; create new note
-;;                     (pause (note-length (:duration curNote))) ;; pause note
-;;                     (note (pitch (:pitch curNote)) (note-length (:duration curNote)))) ;; normal note
-;;           newSeq (conj seq octaveChange newNote)] ;; append octave changes and new note to current sequence
-;;       (if (= (count notes) 0)
-;;         newSeq
-;;         (recur newSeq (first notes) (rest notes) (:octave curNote))))))
+(defn getNoteData [note]
+  "Using note table in Appendix 1.3 on http://www.music.mcgill.ca/~ich/classes/mumt306/StandardMIDIfileformat.html"
+  (let [octave (dec (Math/floor (/ note 12)))
+        pitch (nth [:c :c :d :d :e :f :f :g :g :a :a :b] (mod note 12))
+        accidental (nth [:none :sharp :none :sharp :none :none :sharp :none :sharp :none :sharp :none] (mod note 12))]
+    [(int octave) pitch accidental]))
 
 
-;;version with accidentals
 (defn toAlda [melody]
-  "Convert melody in form of [{:pitch :duration : octave}] to alda"
-  (loop [seq [(part "piano")
-              (octave (:octave (first melody)))]
-         curNote (first melody)
+  "Convert melody in form of [{:note :duration}] to alda"
+  (loop [curNote (first melody)
          notes (rest melody)
-         prevOctave (:octave (first melody))]
-    (let [octaveChange (getOctaveChange prevOctave (:octave curNote)) ;; get necessary octave changes
+         prevOctave (first (getNoteData (:note curNote)))
+         seq [(part "piano")
+              (octave prevOctave)]]
+    (let [[curOctave curPitch curAccidental] (getNoteData (:note curNote))
+          octaveChange (getOctaveChange prevOctave curOctave) ;; get necessary octave changes
           newNote (if-not (isRest curNote) ;; create new note
-                    (if (isSharp curNote)
-                      (note (pitch (:pitch curNote) (:accidental curNote)) (note-length (:duration curNote)))
-                      (if (isFlat curNote)
-                        (note (pitch (:pitch curNote) (:accidental curNote)) (note-length (:duration curNote)))
-                        (note (pitch (:pitch curNote)) (note-length (:duration curNote)))))
-                    (pause (note-length (:duration curNote)))) ;; pause note
-          newSeq (conj seq octaveChange newNote)] ;; append octave changes and new note to current sequence
+                    (if (= curAccidental :none)
+                      (note (pitch curPitch) (note-length (:duration curNote)))
+                      (note (pitch curPitch curAccidental) (note-length (:duration curNote))))
+                    (pause (note-length (:duration curNote))))] ;; normal note
       (if (= (count notes) 0)
-        newSeq
-        (recur newSeq (first notes) (rest notes) (:octave curNote))))))
+        (conj seq octaveChange newNote)
+        (recur (first notes) (rest notes) curOctave (conj seq octaveChange newNote))))))
+
 
 (defn play [melody]
   "Play a melody"
@@ -92,14 +80,8 @@
       (< n 0.8) 2 ;;half note w prob 20%
       :else 1))) ;;full note w prob 20%
 
-(defn getRandomPitch []
-  (rand-nth [:a :b :c :d :e :f :g]))
-
-(defn getRandomAccidental []
-  (rand-nth [:sharp :flat :none])) ;;TODO: What probabilities?
-
-(defn getRandomOctave[] 
-  (+ 1 (rand-int 8)))
+(defn getRandomNote []
+  (- (rand-int 129) 1))
 
 ;;NOTE: The individual will have a length at least as large as numNotes
 ;; but it can be up to 3.5 beats larger
@@ -109,14 +91,10 @@
     (if (<= notesLeft 0)
       melody
       (let [noteSize (getRandomNoteSize)
-            pitch (getRandomPitch)
-            octave (getRandomOctave)
-            accidental (getRandomAccidental)]
-        (recur (- notesLeft (/ 4 noteSize)) (conj melody 
-                                                  {:pitch pitch 
-                                                   :duration noteSize 
-                                                   :octave octave
-                                                   :accidental accidental}))))))
+            note (getRandomNote)]
+        (recur (- notesLeft (/ 4 noteSize)) (conj melody
+                                                  {:note note
+                                                   :duration noteSize}))))))
 
 ;;TODO How do we do this?
 (defn errors
@@ -129,4 +107,6 @@
     {:genome genome
      :errors (errors genome cases)}))
 
-(getNewIndividual 16 [])
+(play (:genome (getNewIndividual 16 [])))
+
+(stop!)
