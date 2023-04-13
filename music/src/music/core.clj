@@ -107,6 +107,9 @@
     {:genome genome
      :errors (errors genome cases)}))
 
-(play (:genome (getNewIndividual 16 [])))
+(getNewIndividual 16 [])
 
-(stop!)
+(defn getlength "Returns binomial sum of length n w/ prob 0.5"
+  [n] (reduce + (random-sample 0.5 (vec (replicate n 1)))))
+
+(getlength 100)
