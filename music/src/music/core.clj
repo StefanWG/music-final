@@ -2,24 +2,32 @@
 
 (require '[alda.core :refer :all])
 
-(def hcb [{:pitch :b, :duration 4, :octave 2},
-          {:pitch :a, :duration 4, :octave 2},
-          {:pitch :g, :duration 2, :octave 2},
-          {:pitch :b, :duration 4, :octave 2},
-          {:pitch :a, :duration 4, :octave 4},
-          {:pitch :g, :duration 2, :octave 4},
-          {:pitch :g, :duration 8, :octave 4},
-          {:pitch :g, :duration 8, :octave 3},
-          {:pitch :g, :duration 8, :octave 3},
-          {:pitch :g, :duration 8, :octave 3},
-          {:pitch :a, :duration 8, :octave 4},
-          {:pitch :a, :duration 8, :octave 4},
-          {:pitch :a, :duration 8, :octave 4},
-          {:pitch :a, :duration 8, :octave 4},
-          {:pitch :b, :duration 4, :octave 4},
-          {:pitch :a, :duration 4, :octave 4},
-          {:pitch :g, :duration 2, :octave 4}])
+(def hcb [{:pitch :b, :accidental :none, :duration 4, :octave 2},
+          {:pitch :a, :accidental :flat, :duration 4, :octave 2},
+          {:pitch :g, :accidental :sharp, :duration 2, :octave 2},
+          {:pitch :b, :accidental :sharp, :duration 4, :octave 2},
+          {:pitch :a, :accidental :flat, :duration 4, :octave 4},
+          {:pitch :g, :accidental :none, :duration 2, :octave 4},
+          {:pitch :g, :accidental :none, :duration 8, :octave 4},
+          {:pitch :g, :accidental :none, :duration 8, :octave 3},
+          {:pitch :g, :accidental :sharp, :duration 8, :octave 3},
+          {:pitch :g, :accidental :none, :duration 8, :octave 3},
+          {:pitch :a, :accidental :flat, :duration 8, :octave 4},
+          {:pitch :a, :accidental :none, :duration 8, :octave 4},
+          {:pitch :a, :accidental :none, :duration 8, :octave 4},
+          {:pitch :a, :accidental :none, :duration 8, :octave 4},
+          {:pitch :b, :accidental :none, :duration 4, :octave 4},
+          {:pitch :a, :accidental :none, :duration 4, :octave 4},
+          {:pitch :g, :accidental :none, :duration 2, :octave 4}])
 
+;;TODO: check if note is sharp or flat 
+(defn isSharp [accidental]
+  "Check if note is a sharp"
+  (= "sharp" (:accidental accidental)))
+
+(defn isFlat [accidental]
+  "Check if note is a flat"
+  (= "flat" (:accidental accidental)))
 
 (defn isRest [note]
   "Check if note is a rest note"
@@ -33,6 +41,25 @@
       (> n 0) (repeat n (octave :down))
       :else [])))
 
+;;org version without accidentals 
+;; (defn toAlda [melody]
+;;   "Convert melody in form of [{:pitch :duration : octave}] to alda"
+;;   (loop [seq [(part "piano")
+;;               (octave (:octave (first melody)))]
+;;          curNote (first melody)
+;;          notes (rest melody)
+;;          prevOctave (:octave (first melody))]
+;;     (let [octaveChange (getOctaveChange prevOctave (:octave curNote)) ;; get necessary octave changes
+;;           newNote (if (isRest curNote) ;; create new note
+;;                     (pause (note-length (:duration curNote))) ;; pause note
+;;                     (note (pitch (:pitch curNote)) (note-length (:duration curNote)))) ;; normal note
+;;           newSeq (conj seq octaveChange newNote)] ;; append octave changes and new note to current sequence
+;;       (if (= (count notes) 0)
+;;         newSeq
+;;         (recur newSeq (first notes) (rest notes) (:octave curNote))))))
+
+
+;;version with accidentals
 (defn toAlda [melody]
   "Convert melody in form of [{:pitch :duration : octave}] to alda"
   (loop [seq [(part "piano")
@@ -41,9 +68,13 @@
          notes (rest melody)
          prevOctave (:octave (first melody))]
     (let [octaveChange (getOctaveChange prevOctave (:octave curNote)) ;; get necessary octave changes
-          newNote (if (isRest curNote) ;; create new note
-                    (pause (note-length (:duration curNote))) ;; pause note
-                    (note (pitch (:pitch curNote)) (note-length (:duration curNote)))) ;; normal note
+          newNote (if-not (isRest curNote) ;; create new note
+                    (if (isSharp curNote)
+                      (note (pitch (:pitch curNote) (:accidental curNote)) (note-length (:duration curNote)))
+                      (if (isFlat curNote)
+                        (note (pitch (:pitch curNote) (:accidental curNote)) (note-length (:duration curNote)))
+                        (note (pitch (:pitch curNote)) (note-length (:duration curNote)))))
+                    (pause (note-length (:duration curNote)))) ;; pause note
           newSeq (conj seq octaveChange newNote)] ;; append octave changes and new note to current sequence
       (if (= (count notes) 0)
         newSeq
@@ -63,6 +94,9 @@
 
 (defn getRandomPitch []
   (rand-nth [:a :b :c :d :e :f :g]))
+
+(defn getRandomAccidental []
+  (rand-nth [:sharp :flat :none]))
 
 (defn getRandomOctave[] 
   (+ 1 (rand-int 8)))
