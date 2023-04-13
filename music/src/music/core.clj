@@ -96,7 +96,7 @@
   (rand-nth [:a :b :c :d :e :f :g]))
 
 (defn getRandomAccidental []
-  (rand-nth [:sharp :flat :none]))
+  (rand-nth [:sharp :flat :none])) ;;TODO: What probabilities?
 
 (defn getRandomOctave[] 
   (+ 1 (rand-int 8)))
@@ -110,8 +110,13 @@
       melody
       (let [noteSize (getRandomNoteSize)
             pitch (getRandomPitch)
-            octave (getRandomOctave)]
-        (recur (- notesLeft (/ 4 noteSize)) (conj melody {:pitch pitch :duration noteSize :octave octave}))))))
+            octave (getRandomOctave)
+            accidental (getRandomAccidental)]
+        (recur (- notesLeft (/ 4 noteSize)) (conj melody 
+                                                  {:pitch pitch 
+                                                   :duration noteSize 
+                                                   :octave octave
+                                                   :accidental accidental}))))))
 
 ;;TODO How do we do this?
 (defn errors
