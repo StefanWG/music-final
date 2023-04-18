@@ -2,7 +2,33 @@
 
 (require '[alda.core :refer :all])
 
-(def hcb [{:pitch :b, :accidental :none, :duration 4, :octave 2},
+(def midiTable {:c 0
+                :d 2
+                :e 4
+                :f 5
+                :g 7
+                :a 9
+                :b 11
+                })
+
+(defn convertNoteToMIDI
+  "Converts a note in the form {:pitch :b, :accidental :none, :duration 4, :octave 2}
+   to {:note 47 :duration 4}"
+  [note]
+  (let [pitch (:pitch note)
+        octave (:octave note)
+        accidental (:accidental note)
+        duration (:duration note)]
+    (cond 
+      (= accidental :none) {:note (+ (* (inc octave) 12) (pitch midiTable)) :duration duration}
+      (= accidental :flat) {:note (+ (* (inc octave) 12) (dec (pitch midiTable))) :duration duration}
+      (= accidental :sharp) {:note (+ (* (inc octave) 12) (inc (pitch midiTable))) :duration duration})))
+
+(defn convertMelodyToMIDI [melody]
+  (vec(map (fn [x] (convertNoteToMIDI x)) melody)))
+
+(def hcb (convertMelodyToMIDI [
+          {:pitch :b, :accidental :none, :duration 4, :octave 2},
           {:pitch :a, :accidental :flat, :duration 4, :octave 2},
           {:pitch :g, :accidental :sharp, :duration 2, :octave 2},
           {:pitch :b, :accidental :sharp, :duration 4, :octave 2},
@@ -18,7 +44,8 @@
           {:pitch :a, :accidental :none, :duration 8, :octave 4},
           {:pitch :b, :accidental :none, :duration 4, :octave 4},
           {:pitch :a, :accidental :none, :duration 4, :octave 4},
-          {:pitch :g, :accidental :none, :duration 2, :octave 4}])
+          {:pitch :g, :accidental :none, :duration 2, :octave 4}]))
+
 
 ;;testing
 
@@ -110,6 +137,8 @@
      :errors (errors genome cases)}))
 
 (getNewIndividual 16 [])
+
+(play hcb)
 
 (defn getlength "Returns binomial sum of length n w/ prob 0.5"
   [n] (reduce + (random-sample 0.5 (vec (repeat n 1)))))
