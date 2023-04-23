@@ -1,6 +1,8 @@
 (ns music.core)
 
 (require '[alda.core :refer :all])
+(require '[music.error :refer :all])
+
 
 (def midiTable {:c 0
                 :d 2
@@ -50,36 +52,42 @@
 ;;testing
 
 ;;TODO: check if note is sharp or flat 
-(defn isSharp [accidental]
+(defn isSharp 
   "Check if note is a sharp"
+  [accidental]
   (= :sharp (:accidental accidental)))
 
-(defn isFlat [accidental]
+(defn isFlat
   "Check if note is a flat"
+  [accidental]
   (= :flat (:accidental accidental)))
 
-(defn isRest [note]
+(defn isRest
   "Check if note is a rest note"
+  [note]
   (= note -1))
 
-(defn getOctaveChange [prevOctave nextOctave]
+(defn getOctaveChange
   "Get alda code for octave change between previous note and current note"
+  [prevOctave nextOctave]
   (let [n (- prevOctave nextOctave)]
     (cond
       (< n 0) (repeat (abs n) (octave :up))
       (> n 0) (repeat n (octave :down))
       :else [])))
 
-(defn getNoteData [note]
+(defn getNoteData
   "Using note table in Appendix 1.3 on http://www.music.mcgill.ca/~ich/classes/mumt306/StandardMIDIfileformat.html"
+  [note]
   (let [octave (dec (Math/floor (/ note 12)))
         pitch (nth [:c :c :d :d :e :f :f :g :g :a :a :b] (mod note 12))
         accidental (nth [:none :sharp :none :sharp :none :none :sharp :none :sharp :none :sharp :none] (mod note 12))]
     [(int octave) pitch accidental]))
 
 
-(defn toAlda [melody]
+(defn toAlda
   "Convert melody in form of [{:note :duration}] to alda"
+  [melody]
   (loop [curNote (first melody)
          notes (rest melody)
          prevOctave (first (getNoteData (:note curNote)))
@@ -97,8 +105,9 @@
         (recur (first notes) (rest notes) curOctave (conj seq octaveChange newNote))))))
 
 
-(defn play [melody]
+(defn play 
   "Play a melody"
+  [melody]
   (play! (toAlda melody)))
 
 (defn getRandomNoteSize []
@@ -129,14 +138,18 @@
 (defn errors
   "Calculate errors for a given genome"
   [genome cases]
-  []) 
+  (loop [casesLeft cases
+         errors []]
+    (if (empty? casesLeft)
+      errors
+      (recur (rest casesLeft) (conj errors ((first casesLeft) genome)))))) 
 
 (defn getNewIndividual [numNotes cases]
   (let [genome (getNewGenome numNotes)]
     {:genome genome
      :errors (errors genome cases)}))
 
-(getNewIndividual 16 [])
+(getNewIndividual 1000 [restError melodyPatternError])
 
 (play hcb)
 
