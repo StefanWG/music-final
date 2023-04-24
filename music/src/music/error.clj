@@ -21,7 +21,7 @@
       diffs)))
 
 (defn melodyPatterns 
-  "Returns the number of time each pattern of length n occurs in the melody
+  "Returns the number of time each melodic pattern of length n occurs in the melody
    (this is all consecutive sequences of size n in the melody)"
   [genome n]
     (loop [notes (map #(:note %) genome)
@@ -41,4 +41,34 @@
       (float (reduce + maxReps))
       (recur (rest ns) (conj maxReps (/ 1 (apply max (melodyPatterns genome (first ns)))))))))
 
+(defn rhythmicPatterns
+  "Returns the number of time each rythmic pattern of length n occurs in the melody
+   (this is all consecutive sequences of size n in the melody)"
+  [genome n]
+  (loop [noteLengths (map #(:duration %) genome)
+         patterns []]
+    (if (< (count noteLengths) n)
+      (vals (frequencies patterns))
+      (recur (rest noteLengths) (conj patterns (getDiffs (take n noteLengths)))))))
 
+(defn noteLengthConversion
+  "Converts the duration representation to the mathematical length"
+  [genome]
+  (map (fn [x] (cond
+                 (= 8 x) 0.5
+                 (= 4 x) 1
+                 (= 2 x) 2
+                 (= 1 x) 4)) (map #(:duration %) genome)))
+
+(defn rhythmicCoherenceError
+  "Assuming 4/4 time signature. If the melody doesn't fill out a measure within two measures, it incurs an error point for each additional measure
+   Not finished yet"
+  [genome]
+  (loop [noteLengths (noteLengthConversion genome)
+         error []
+         accruedLength 0]
+    (let [curr (first noteLengths)]
+      (cond
+        (empty? noteLengths) (apply + (map #(- % 1) (filter (complement #{0 1}) (map #(int %)(conj error (quot accruedLength 4))))))
+        (= 0 (mod (+ curr accruedLength) 4)) (recur (rest noteLengths) (conj error (quot accruedLength 4)) 0)
+        :else (recur (rest noteLengths) error (+ curr accruedLength))))))
