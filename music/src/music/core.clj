@@ -174,9 +174,10 @@
            note))
        (map (fn [note]
          (if (< (rand) mutation-rate)
-           (assoc note :note (print(mutate_note (get note :note))))
+           (assoc note :note (mutate_note (get note :note)))
            note))
        genome)))
 
-(mutate melody 0.05)
+(mutate hcb 0.05)
 
+(play (mutate hcb 0.05))g
