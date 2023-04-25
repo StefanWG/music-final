@@ -156,4 +156,27 @@
 (defn getlength "Returns binomial sum of length n w/ prob 0.5"
   [n] (reduce + (random-sample 0.5 (vec (repeat n 1)))))
 
+(defn binomsample [n r]
+  (reduce + (random-sample r (vec (repeat n 1)))))
+
 (getlength 100)
+
+(defn mutate_note [note]
+  (let [diff (- (binomsample 10 0.5) 5)
+        result (+ note diff)]
+    (if (> result -1)
+      (if (< result 128) result 127) 0)))
+
+(defn mutate [genome mutation-rate]
+  (map (fn [note]
+         (if (< (rand) mutation-rate)
+           (assoc note :duration (getRandomNoteSize))
+           note))
+       (map (fn [note]
+         (if (< (rand) mutation-rate)
+           (assoc note :note (print(mutate_note (get note :note))))
+           note))
+       genome)))
+
+(mutate melody 0.05)
+

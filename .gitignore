@@ -4,3 +4,4 @@
 .lsp/
 .clj-kondo/
 *.exe
+music/src/.nrepl-port
