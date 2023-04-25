@@ -20,26 +20,26 @@
       (recur (rest x) f (conj diffs (- f (second x))))
       diffs)))
 
-(defn melodyPatterns 
+(defn melodyPatterns
   "Returns the number of time each melodic pattern of length n occurs in the melody
    (this is all consecutive sequences of size n in the melody)"
   [genome n]
-    (loop [notes (map #(:note %) genome)
-           patterns []]
-      (if (< (count notes) n)
-        (vals (frequencies patterns))
-        (recur (rest notes) (conj patterns (getDiffs (take n notes))))))) ;;remove getDiffs for the same notes, get diffs uses jumps of same sizes
+  (loop [notes (map #(:note %) genome)
+         patterns []]
+    (if (< (count notes) n)
+      (vals (frequencies patterns))
+      (recur (rest notes) (conj patterns (getDiffs (take n notes))))))) ;;remove getDiffs for the same notes, get diffs uses jumps of same sizes
 
 
 (defn melodyPatternError 
   "Returns the error from patterns in the melody - there is a larger error if there 
    are fewer patterns"
   [genome]
-  (loop [ns [1 2 4 8]
+  (loop [n [1 2 4 8]
          maxReps []]
-    (if (empty? ns)
+    (if (or (empty? n) (< (count genome) (first n)))
       (float (reduce + maxReps))
-      (recur (rest ns) (conj maxReps (/ 1 (apply max (melodyPatterns genome (first ns)))))))))
+      (recur (rest n) (conj maxReps (/ 1 (apply max (melodyPatterns genome (first n)))))))))
 
 (defn rhythmicPatterns
   "Returns the number of time each rythmic pattern of length n occurs in the melody
