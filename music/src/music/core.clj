@@ -155,3 +155,35 @@
 
 (defn getlength "Returns binomial sum of length n w/ prob 0.5"
   [n] (reduce + (random-sample 0.5 (vec (repeat n 1)))))
+
+(defn binomsample "Returns binomial sum of length n w/ prob r"
+  [n r]
+  (reduce + (random-sample r (vec (repeat n 1)))))
+
+(getlength 100)
+
+(defn mutate_note "Takes in an integer note then mutates it according to a binomial distribution with mean zero and max absolute difference of 5.
+                   Also adheres to the floor and ceiling of the notes table. If a mutation will go past this it will just round down."
+  [note]
+  (let [diff (- (binomsample 10 0.5) 5)
+        result (+ note diff)]
+    (if (> result -1)
+      (if (< result 128) result 127) 0)))
+
+(defn mutate "Takes in a melody genome and mutation rate between 0 and 1 inclusive. For each note, with probability mutation rate,
+              there is a chance that the note will be mutated with mutate_note.
+              Also, a separate pass with the same probability mutation rate has the chance to mutate the note length with getRandomNoteSize."
+  [genome mutation-rate]
+  (map (fn [note]
+         (if (< (rand) mutation-rate)
+           (assoc note :duration (getRandomNoteSize))
+           note))
+       (map (fn [note]
+         (if (< (rand) mutation-rate)
+           (assoc note :note (mutate_note (get note :note)))
+           note))
+       genome)))
+
+(mutate hcb 0.05)
+
+(play (mutate hcb 0.05))
