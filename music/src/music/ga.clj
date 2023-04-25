@@ -75,3 +75,4 @@
         (recur (inc curGen) (repeatedly popsize #(makeChild pop cases)))))))
 
 (run 100 100 100 cases)
+(spit "text.txt" (run 100 100 100 cases))

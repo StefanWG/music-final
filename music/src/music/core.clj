@@ -149,6 +149,10 @@
     {:genome genome
      :errors (errors genome cases)}))
 
+(defn playFromFile [filepath]
+  (play (:genome (read-string (slurp filepath)))))
+
+
 (getNewIndividual 1000 [restError melodyPatternError])
 
 (play hcb)
