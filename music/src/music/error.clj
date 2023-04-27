@@ -72,3 +72,18 @@
         (empty? noteLengths) (apply + (map #(- % 1) (filter (complement #{0 1}) (map #(int %)(conj error (quot accruedLength 4))))))
         (= 0 (mod (+ curr accruedLength) 4)) (recur (rest noteLengths) (conj error (quot accruedLength 4)) 0)
         :else (recur (rest noteLengths) error (+ curr accruedLength))))))
+
+(defn averageNote
+  "Calculates the average note of the melody (add all numerical rep of notes / number of notes in melody)"
+  [genome]
+  (/ (reduce + (filter #(not= (:note %) -1) genome)) (count (filter #(not= (:note %) -1) genome))))
+
+(defn distanceError
+  "Punishes total distance from the average note"
+  [genome]
+  (reduce + (map #(abs (- % (averageNote genome))) (map #(:note %) genome))))
+
+(defn variationError
+  "Reward some large variation"
+  [genome]
+  (- (apply max (map #(:note %) genome)) (apply min (map #(:note %) genome))))
