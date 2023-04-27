@@ -8,7 +8,7 @@
   ;;Could be easily modified to include the length of rests with a 
   ;;larger punishment for longer rests
   (let [numRests (count (filter #(= (:note %) -1) genome))
-        error (- (/ numrests (count genome)) 0.25)]
+        error (- (/ numRests (count genome)) 0.25)]
     (min 0 error)))
 
 (defn getDiffs 
