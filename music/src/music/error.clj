@@ -35,7 +35,7 @@
   "Returns the error from patterns in the melody - there is a larger error if there 
    are fewer patterns"
   [genome]
-  (loop [n [1 2 4 8]
+  (loop [n [2 4 8]
          maxReps []]
     (if (or (empty? n) (< (count genome) (first n)))
       (float (reduce + maxReps))

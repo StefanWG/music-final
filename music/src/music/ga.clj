@@ -3,7 +3,7 @@
 (require '[music.error :refer :all])
 
 
-(def cases [restError rhythmicCoherenceError melodyPatternError])
+(def cases [restError rhythmicCoherenceError melodyPatternError distanceError variationError])
 
 (defn better
   [i1 i2]
@@ -68,11 +68,12 @@
 (defn run [popsize numgen numnotes cases]
   (loop [curGen 0
          pop (sort better (repeatedly popsize #(getNewIndividual numnotes cases)))]
-    (let [best (first pop)]
+    (let [best (first (sort better pop))]
       (println "GEN: " curGen ", ERROR: " (reduce + (:errors best)))
       (if (= curGen numgen)
         best
-        (recur (inc curGen) (repeatedly popsize #(makeChild pop cases)))))))
+        (recur (inc curGen) (conj (repeatedly (- popsize 1) #(makeChild pop cases)) best))))))
 
-(run 100 100 100 cases)
+
 (spit "text.txt" (run 100 100 100 cases))
+(playFromFile "text.txt")
