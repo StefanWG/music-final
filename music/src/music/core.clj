@@ -92,6 +92,7 @@
          notes (rest melody)
          prevOctave (first (getNoteData (:note curNote)))
          seq [(part "piano")
+              (tempo 160)
               (octave prevOctave)]]
     (let [[curOctave curPitch curAccidental] (getNoteData (:note curNote))
           octaveChange (getOctaveChange prevOctave curOctave) ;; get necessary octave changes
@@ -134,7 +135,6 @@
                                                   {:note note
                                                    :duration noteSize}))))))
 
-;;TODO How do we do this?
 (defn errors
   "Calculate errors for a given genome"
   [genome cases]

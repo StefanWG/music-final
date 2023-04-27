@@ -3,7 +3,9 @@
 (require '[music.error :refer :all])
 
 
-(def cases [restError rhythmicCoherenceError melodyPatternError distanceError variationError])
+(def cases [restError rhythmicCoherenceError 
+            melodyPatternError distanceError 
+            variationError octaveChangeError])
 
 (defn better
   [i1 i2]
@@ -45,11 +47,18 @@
 (defn mutate_note "Takes in an integer note then mutates it according to a binomial distribution with mean zero and max absolute difference of 5.
                    Also adheres to the floor and ceiling of the notes table. If a mutation will go past this it will just round down."
   [note]
-  (let [diff (- (binomsample 10 0.5) 5)
+  (let [restProb 0.1
+        diff (- (binomsample 10 0.5) 5)
         result (+ note diff)]
-    (if (> result -1)
-      (if (< result 128) result 127) 0)))
-
+    (if (= -1 note)
+      (if (< (rand) restProb)  ;; Rest
+        result
+        -1)
+      (if (< (rand) restProb)
+        -1
+        (if (> result -1) ;; Not a rest
+         (if (< result 128) result 127) 0)))))
+        
 (defn mutate "Takes in a melody genome and mutation rate between 0 and 1 inclusive. For each note, with probability mutation rate,
               there is a chance that the note will be mutated with mutate_note.
               Also, a separate pass with the same probability mutation rate has the chance to mutate the note length with getRandomNoteSize."
@@ -64,7 +73,6 @@
                 note))
             genome)))
 
-;;TODO: use some combination of crossover, selection and mutation
 (defn makeChild [pop cases]
   (let [parent1 (:genome (select pop))
         parent2 (:genome (select pop))
@@ -76,11 +84,11 @@
   (loop [curGen 0
          pop (sort better (repeatedly popsize #(getNewIndividual numnotes cases)))]
     (let [best (first (sort better pop))]
-      (println "GEN: " curGen ", ERROR: " (reduce + (:errors best)))
+      (println "GEN: " curGen ", ERROR: " (reduce + (:errors best)) ", " (nth (:errors best) 0))
       (if (= curGen numgen)
         best
         (recur (inc curGen) (conj (repeatedly (- popsize 1) #(makeChild pop cases)) best))))))
 
 
-(spit "text.txt" (run 100 100 100 cases))
+(spit "text.txt" (run 500 100 50 cases))
 (playFromFile "text.txt")

@@ -1,6 +1,10 @@
 (ns music.error)
 (require '[music.core :refer :all])
 
+;;Penalize errors of size 13 >
+;;proportion octave changes - (.02), or 0 (max)
+(defn octaveChangeError [genome]
+  )
 
 (defn restError 
   "Returns the number of rests in the melody (more rests means more error)"
