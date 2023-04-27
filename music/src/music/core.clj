@@ -153,6 +153,6 @@
   (play (:genome (read-string (slurp filepath)))))
 
 
-(getNewIndividual 1000 [restError melodyPatternError])
+(getNewIndividual 1000 [distanceError variationError])
 
 (play hcb)

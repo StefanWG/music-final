@@ -76,14 +76,14 @@
 (defn averageNote
   "Calculates the average note of the melody (add all numerical rep of notes / number of notes in melody)"
   [genome]
-  (/ (reduce + (filter #(not= (:note %) -1) genome)) (count (filter #(not= (:note %) -1) genome))))
+  (/ (reduce + (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (count (filter #(not= (:note %) -1) genome))))
 
 (defn distanceError
   "Punishes total distance from the average note"
   [genome]
-  (reduce + (map #(abs (- % (averageNote genome))) (map #(:note %) genome))))
+  (reduce + (map #(abs (- % (averageNote genome))) (filter #(not= (:note %) -1) (for [x genome] (get x :note))))))
 
 (defn variationError
   "Reward some large variation"
   [genome]
-  (- (apply max (map #(:note %) genome)) (apply min (map #(:note %) genome))))
+  (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note))))))
