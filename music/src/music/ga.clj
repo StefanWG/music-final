@@ -24,7 +24,14 @@
   (lexicaseSelection pop))
 
 (defn crossover [p1 p2]
-  p1)
+  (loop [newGenome []
+         i 0]
+    (if (= i (min (count p1) (count p2)))
+      newGenome
+      (let [newNote (if (< (rand) 0.5)
+                      (nth p1 i)
+                      (nth p2 i))]
+        (recur (conj newGenome newNote) (inc i))))))
 
 (defn getlength "Returns binomial sum of length n w/ prob 0.5"
   [n] (reduce + (random-sample 0.5 (vec (repeat n 1)))))
