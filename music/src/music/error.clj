@@ -4,7 +4,14 @@
 ;;Penalize errors of size 13 >
 ;;proportion octave changes - (.02), or 0 (max)
 (defn octaveChangeError [genome]
-  )
+  (let [len (count genome)]
+    (loop [numChanges 0
+           notes (map #(:note %) genome)]
+      (if (= (count notes) 1)
+        (max 0 (- (/ numChanges len) 0.02))
+        (if (> (abs (- (first notes) (second notes))) 12)
+          (recur (inc numChanges) (rest notes))
+          (recur numChanges (rest notes)))))))
 
 (defn restError 
   "Returns the number of rests in the melody (more rests means more error)"
