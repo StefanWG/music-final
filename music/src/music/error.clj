@@ -20,7 +20,7 @@
   ;;larger punishment for longer rests
   (let [numRests (count (filter #(= (:note %) -1) genome))
         error (- (/ numRests (count genome)) 0.25)]
-    (min 0 error)))
+    (max 0 error)))
 
 (defn getDiffs 
   "Returns the size of the jumps in a pattern in the melody"
