@@ -42,8 +42,6 @@
   [n r]
   (reduce + (random-sample r (vec (repeat n 1)))))
 
-(getlength 100)
-
 (defn mutate_note "Takes in an integer note then mutates it according to a binomial distribution with mean zero and max absolute difference of 5.
                    Also adheres to the floor and ceiling of the notes table. If a mutation will go past this it will just round down."
   [note]
@@ -90,5 +88,21 @@
         (recur (inc curGen) (conj (repeatedly (- popsize 1) #(makeChild pop cases)) best))))))
 
 
-(spit "text.txt" (run 500 100 50 cases))
-(playFromFile "text.txt")
+
+
+
+(for [popsize [50 100 200]
+      numgen [50 100 200]
+      numnotes [20 30 50]]
+  (loop [i 0]
+    (let [fileName (str "file_" popsize "_" numgen "_" numnotes "_" i ".txt")]
+                 (println fileName)
+
+      (if (< i 3)
+         (do
+           (spit fileName (run popsize numgen numnotes cases))
+           (recur (inc i)))
+        ))))
+
+(playFromFile "file_200_200_30_2.txt")
+

@@ -1,17 +1,16 @@
 (ns music.error)
 (require '[music.core :refer :all])
 
-;;Penalize errors of size 13 >
-;;proportion octave changes - (.02), or 0 (max)
-(defn octaveChangeError [genome]
+
+(defn octaveChangeError 
+  "Returns the error due to large difference between consecutive notes"
+  [genome]
   (let [len (count genome)]
     (loop [numChanges 0
            notes (map #(:note %) genome)]
       (if (= (count notes) 1)
         (max 0 (- (/ numChanges len) 0.02))
-        (if (> (abs (- (first notes) (second notes))) 12)
-          (recur (inc numChanges) (rest notes))
-          (recur numChanges (rest notes)))))))
+        (recur (+ numChanges (Math/floorDiv (abs (- (first notes) (second notes))) 12)) (rest notes))))))
 
 (defn restError 
   "Returns the number of rests in the melody (more rests means more error)"
@@ -43,6 +42,9 @@
       (recur (rest notes) (conj patterns (getDiffs (take n notes))))))) ;;remove getDiffs for the same notes, get diffs uses jumps of same sizes
 
 
+(defn avg [coll]
+  (/ (reduce + coll) (count coll)))
+
 (defn melodyPatternError 
   "Returns the error from patterns in the melody - there is a larger error if there 
    are fewer patterns"
@@ -51,7 +53,7 @@
          maxReps []]
     (if (or (empty? n) (< (count genome) (first n)))
       (float (reduce + maxReps))
-      (recur (rest n) (conj maxReps (/ 1 (apply max (melodyPatterns genome (first n)))))))))
+      (recur (rest n) (conj maxReps (/ 1 (max (melodyPatterns genome (first n)))))))))
 
 (defn rhythmicPatterns
   "Returns the number of time each rythmic pattern of length n occurs in the melody
