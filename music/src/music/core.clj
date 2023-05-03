@@ -90,10 +90,10 @@
   [melody]
   (loop [curNote (first melody)
          notes (rest melody)
-         prevOctave (first (getNoteData (:note curNote)))
+         prevOctave (max (first (getNoteData (:note curNote))) 0)
          seq [(part "piano")
               (tempo 160)
-              (octave (max prevOctave 0))]]
+              (octave prevOctave )]]
     (let [[curOctave curPitch curAccidental] (getNoteData (:note curNote))
           octaveChange (getOctaveChange prevOctave curOctave) ;; get necessary octave changes
           newNote (if (isRest curNote)
@@ -101,7 +101,6 @@
                     (if (= curAccidental :none)
                       (note (pitch curPitch) (note-length (:duration curNote)))
                       (note (pitch curPitch curAccidental) (note-length (:duration curNote)))))] ;; normal note
-      (println curNote (isRest curNote) (pause (note-length (:duration curNote))))
       (if (= (count notes) 0)
         (conj seq octaveChange newNote)
         (recur (first notes) (rest notes) curOctave (conj seq octaveChange newNote))))))
