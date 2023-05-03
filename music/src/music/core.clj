@@ -65,7 +65,7 @@
 (defn isRest
   "Check if note is a rest note"
   [note]
-  (= note -1))
+  (= (:note note) -1))
 
 (defn getOctaveChange
   "Get alda code for octave change between previous note and current note"
@@ -93,14 +93,15 @@
          prevOctave (first (getNoteData (:note curNote)))
          seq [(part "piano")
               (tempo 160)
-              (octave prevOctave)]]
+              (octave (max prevOctave 0))]]
     (let [[curOctave curPitch curAccidental] (getNoteData (:note curNote))
           octaveChange (getOctaveChange prevOctave curOctave) ;; get necessary octave changes
-          newNote (if-not (isRest curNote) ;; create new note
+          newNote (if (isRest curNote)
+                    (pause (note-length (:duration curNote))) ;; rest
                     (if (= curAccidental :none)
                       (note (pitch curPitch) (note-length (:duration curNote)))
-                      (note (pitch curPitch curAccidental) (note-length (:duration curNote))))
-                    (pause (note-length (:duration curNote))))] ;; normal note
+                      (note (pitch curPitch curAccidental) (note-length (:duration curNote)))))] ;; normal note
+      (println curNote (isRest curNote) (pause (note-length (:duration curNote))))
       (if (= (count notes) 0)
         (conj seq octaveChange newNote)
         (recur (first notes) (rest notes) curOctave (conj seq octaveChange newNote))))))
