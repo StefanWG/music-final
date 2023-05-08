@@ -161,5 +161,8 @@
 (defn playFromFile [filepath]
   (play (:genome (read-string (slurp filepath)))))
 
+(defn readBachDataset []
+  (map read-string (clojure.string/split-lines (slurp "melodies.txt"))))
+
 
 (getNewIndividual 1000 [distanceError variationError])
