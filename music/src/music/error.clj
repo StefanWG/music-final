@@ -53,7 +53,7 @@
          maxReps []]
     (if (or (empty? n) (< (count genome) (first n)))
       (float (reduce + maxReps))
-      (recur (rest n) (conj maxReps (/ 1 (max (melodyPatterns genome (first n)))))))))
+      (recur (rest n) (conj maxReps (/ 1 (apply max (melodyPatterns genome (first n)))))))))
 
 (defn rhythmicPatterns
   "Returns the number of time each rythmic pattern of length n occurs in the melody
