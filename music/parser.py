@@ -1,4 +1,16 @@
 import json
+import os
+
+def breakUpFile(fp):
+    with open(fp, "r") as file:
+        lines = file.readlines()
+        x = 0
+        for i in range(len(lines) // 1000):
+            with open(f"bach-data/batch{i}.txt", "w") as out:
+                for _ in range(1000):
+                    out.write(lines[x])
+                    x+=1
+
 
 def aldaToString(alda, feedback):
     s = f"{{:genome ["
@@ -7,9 +19,14 @@ def aldaToString(alda, feedback):
     s += f"] :feedback {feedback}}}"
     return s
 
+# break up big bach-data file into small ones so i can push to git
+# breakUpFile("data.txt")
 
-with open("data.txt", "r") as file:
-    melodies = file.readlines()
+melodies = []
+
+for filePath in os.listdir("bach-data"):
+    with open(f'bach-data/{filePath}', "r") as file:
+        melodies.extend(file.readlines())
 
 with open("src/melodies.txt", "w") as file:
     for melody in melodies:
