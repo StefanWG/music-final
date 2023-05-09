@@ -328,27 +328,19 @@
         best
         (recur (inc curGen) (conj (repeatedly (- popsize 1) #(makeChild pop cases)) best))))))
 
+(defn readBachDataset []
+  (map read-string (clojure.string/split-lines (slurp "melodies.txt"))))
 
 (def cases [restError rhythmicCoherenceError
             melodyPatternError distanceError
             variationError octaveChangeError])
 
 ;; Generate random melody and to show improvement of our algorithm
-(spit "randomMelody1.txt" (getNewIndividual 20 cases))
-(spit "randomMelody2.txt" (getNewIndividual 20 cases))
+(spit "randomMelody1.txt" (getNewIndividual 30 cases))
+(spit "randomMelody2.txt" (getNewIndividual 30 cases))
 
 (playFromFile "randomMelody1.txt")
 (playFromFile "randomMelody2.txt")
-
-;; Play melodies that sound good - what parameters
-
-;; Run algo once with good parameters and see what happens
-(spit "demo.txt" (run 100 100 30 cases))
-
-;; Converges to one note?
-
-
-
 
 ;; ;; Run experiment with different parameters
 
@@ -358,14 +350,28 @@
 ;;   (loop [i 0]
 ;;     (let [fileName (str "file_" popsize "_" numgen "_" numnotes "_" i ".txt")]
 ;;       (println fileName)
-
 ;;       (if (< i 3)
 ;;         (do
 ;;           (spit fileName (run popsize numgen numnotes cases))
 ;;           (recur (inc i)))))))
 
-;; (playFromFile "file_200_200_30_2.txt")
+;; Play melodies that sound good - what parameters
+(playFromFile "file_200_200_50_2.txt")
+(playFromFile "file_200_200_50_0.txt")
 
-(defn readBachDataset []
-  (map read-string (clojure.string/split-lines (slurp "melodies.txt"))))
+(playFromFile "file_100_100_30_1.txt")
+
+(playFromFile "file_100_100_20_0.txt")
+
+;; Run algo once with good parameters and see what happens
+(spit "demo.txt" (run 100 100 30 cases))
+(playFromFile "demo.txt") 
+
+;; Converges to one note
+(playFromFile "file_200_200_20_1.txt")
+
+;; High octave
+(playFromFile "file_100_50_20_0.txt")
+
+
 
