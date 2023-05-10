@@ -101,3 +101,22 @@
   "Reward some large variation"
   [genome]
   (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note))))))
+
+(defn distinctNotes
+  "Return hashmap with key being a note, and the value as number of times note appears"
+  [genome]
+  (loop [distinctNotes {}
+         remainingNotes (map #(:note %) genome)]
+    (if (empty? remainingNotes)
+      distinctNotes
+      (let [currNote (first remainingNotes)]
+        (if (contains? distinctNotes currNote)
+          (recur (assoc distinctNotes currNote (inc (get distinctNotes currNote))) (rest remainingNotes))
+          (recur (assoc distinctNotes currNote 1) (rest remainingNotes)))))))
+
+(defn diversityError
+  "If more than 2/5 of the melody is composed of the same note, punish the genome"
+  [genome]
+  (let [distinctNoteCounts (vals (distinctNotes genome))
+        totalNotes (count genome)]
+    (count (filter #(>= (/ % totalNotes) (/ 2 5)) distinctNoteCounts))))
