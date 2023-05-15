@@ -336,11 +336,6 @@
             variationError octaveChangeError])
 
 ;; Generate random melody and to show improvement of our algorithm
-(spit "randomMelody1.txt" (getNewIndividual 30 cases))
-(spit "randomMelody2.txt" (getNewIndividual 30 cases))
-
-(playFromFile "randomMelody1.txt")
-(playFromFile "randomMelody2.txt")
 
 ;; ;; Run experiment with different parameters
 
@@ -357,21 +352,5 @@
 
 ;; Play melodies that sound good - what parameters
 (playFromFile "file_200_200_50_2.txt")
-(playFromFile "file_200_200_50_0.txt")
-
-(playFromFile "file_100_100_30_1.txt")
-
-(playFromFile "file_100_100_20_0.txt")
-
-;; Run algo once with good parameters and see what happens
-(spit "demo.txt" (run 100 100 30 cases))
-(playFromFile "demo.txt") 
-
-;; Converges to one note
-(playFromFile "file_200_200_20_1.txt")
-
-;; High octave
-(playFromFile "file_100_50_20_0.txt")
-
 
 
