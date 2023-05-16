@@ -1,66 +1,6 @@
 (ns music.core)
 
 (require '[alda.core :refer :all])
-(require '[music.error :refer :all])
-
-
-(def midiTable {:c 0
-                :d 2
-                :e 4
-                :f 5
-                :g 7
-                :a 9
-                :b 11
-                })
-
-(defn convertNoteToMIDI
-  "Converts a note in the form {:pitch :b, :accidental :none, :duration 4, :octave 2}
-   to {:note 47 :duration 4}"
-  [note]
-  (let [pitch (:pitch note)
-        octave (:octave note)
-        accidental (:accidental note)
-        duration (:duration note)]
-    (cond 
-      (= accidental :none) {:note (+ (* (inc octave) 12) (pitch midiTable)) :duration duration}
-      (= accidental :flat) {:note (+ (* (inc octave) 12) (dec (pitch midiTable))) :duration duration}
-      (= accidental :sharp) {:note (+ (* (inc octave) 12) (inc (pitch midiTable))) :duration duration})))
-
-(defn convertMelodyToMIDI [melody]
-  (vec(map (fn [x] (convertNoteToMIDI x)) melody)))
-
-(def hcb (convertMelodyToMIDI [
-          {:pitch :b, :accidental :none, :duration 4, :octave 2},
-          {:pitch :a, :accidental :flat, :duration 4, :octave 2},
-          {:pitch :g, :accidental :sharp, :duration 2, :octave 2},
-          {:pitch :b, :accidental :sharp, :duration 4, :octave 2},
-          {:pitch :a, :accidental :flat, :duration 4, :octave 4},
-          {:pitch :g, :accidental :none, :duration 2, :octave 4},
-          {:pitch :g, :accidental :none, :duration 8, :octave 4},
-          {:pitch :g, :accidental :none, :duration 8, :octave 3},
-          {:pitch :g, :accidental :sharp, :duration 8, :octave 3},
-          {:pitch :g, :accidental :none, :duration 8, :octave 3},
-          {:pitch :a, :accidental :flat, :duration 8, :octave 4},
-          {:pitch :a, :accidental :none, :duration 8, :octave 4},
-          {:pitch :a, :accidental :none, :duration 8, :octave 4},
-          {:pitch :a, :accidental :none, :duration 8, :octave 4},
-          {:pitch :b, :accidental :none, :duration 4, :octave 4},
-          {:pitch :a, :accidental :none, :duration 4, :octave 4},
-          {:pitch :g, :accidental :none, :duration 2, :octave 4}]))
-
-
-;;testing
-
-;;TODO: check if note is sharp or flat 
-(defn isSharp 
-  "Check if note is a sharp"
-  [accidental]
-  (= :sharp (:accidental accidental)))
-
-(defn isFlat
-  "Check if note is a flat"
-  [accidental]
-  (= :flat (:accidental accidental)))
 
 (defn isRest
   "Check if note is a rest note"
@@ -84,7 +24,6 @@
         accidental (nth [:none :sharp :none :sharp :none :none :sharp :none :sharp :none :sharp :none] (mod note 12))]
     [(int octave) pitch accidental]))
 
-
 (defn toAlda
   "Convert melody in form of [{:note :duration}] to alda"
   [melody]
@@ -93,7 +32,7 @@
          prevOctave (max (first (getNoteData (:note curNote))) 0)
          seq [(part "piano")
               (tempo 160)
-              (octave prevOctave )]]
+              (octave prevOctave)]]
     (let [[curOctave curPitch curAccidental] (getNoteData (:note curNote))
           octaveChange (getOctaveChange prevOctave curOctave) ;; get necessary octave changes
           newNote (if (isRest curNote)
@@ -106,63 +45,40 @@
         (recur (first notes) (rest notes) curOctave (conj seq octaveChange newNote))))))
 
 
-(defn play 
+(defn play
   "Play a melody"
   [melody]
   (play! (toAlda melody)))
 
-(defn getRandomNoteSize []
-  ;; 4)
-  (let [n (rand)]
-    (cond
-      (< n 0.25) 8 ;;eigth note w prob 20%
-      (< n 0.7) 4 ;;quarter note w prob 40%
-      (< n 0.9) 2 ;;half note w prob 20%
-      :else 1))) ;;full note w prob 20%
-
-(defn getRandomNote []
-  (- (rand-int 129) 1))
-
-;;NOTE: The individual will have a length at least as large as numNotes
-;; but it can be up to 3.5 beats larger
-;; (defn getNewGenome [numNotes] ;;In terms of quarters notes
-;;   (loop [notesLeft numNotes
-;;          melody []]
-;;     (if (<= notesLeft 0)
-;;       melody
-;;       (let [noteSize (getRandomNoteSize)
-;;             note (getRandomNote)]
-;;         (recur (- notesLeft (/ 4 noteSize)) (conj melody
-;;                                                   {:note note
-;;                                                    :duration noteSize}))))))
-
-(defn getNewGenome [numNotes]
-  (loop [notesLeft numNotes
-         melody []]
-    (if (< notesLeft 1)
-      melody 
-      (recur (dec notesLeft) (conj melody {:note (getRandomNote)
-                                           :duration (getRandomNoteSize)})))))
-
-(defn errors
-  "Calculate errors for a given genome"
-  [genome cases]
-  (loop [casesLeft cases
-         errors []]
-    (if (empty? casesLeft)
-      errors
-      (recur (rest casesLeft) (conj errors ((first casesLeft) genome)))))) 
-
-(defn getNewIndividual [numNotes cases]
-  (let [genome (getNewGenome numNotes)]
-    {:genome genome
-     :errors (errors genome cases)}))
-
 (defn playFromFile [filepath]
   (play (:genome (read-string (slurp filepath)))))
 
-(defn readBachDataset []
-  (map read-string (clojure.string/split-lines (slurp "melodies.txt"))))
+(defn getlength "Returns binomial sum of length n w/ prob 0.5"
+  [n] (reduce + (random-sample 0.5 (vec (repeat n 1)))))
 
+(defn binomsample "Returns binomial sum of length n w/ prob r"
+  [n r]
+  (reduce + (random-sample r (vec (repeat n 1)))))
 
-(getNewIndividual 1000 [distanceError variationError])
+(defn pauseTime
+  "Prevents overlap of multiple files being played at the same time"
+  [x]
+  (Thread/sleep (* x 1000)))
+
+(defn playAllFiles
+  "Plays all the generated files"
+  []
+  (for [popsize [50 100 200]
+        numgen [50 100 200]
+        numnotes [20 30 50]]
+    (loop [i 0]
+      (let [fileName (str "file_" popsize "_" numgen "_" numnotes "_" i ".txt")
+            secondsToWait (cond (= numnotes 20) 14
+                                (= numnotes 30) 17
+                                (= numnotes 50) 22)]
+        (println fileName)
+        (if (< i 3)
+          (do
+            (playFromFile fileName)
+            (pauseTime secondsToWait)
+            (recur (inc i))))))))
