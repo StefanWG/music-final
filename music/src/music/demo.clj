@@ -4,62 +4,6 @@
 (require '[alda.core :refer :all])
 
 
-(def midiTable {:c 0
-                :d 2
-                :e 4
-                :f 5
-                :g 7
-                :a 9
-                :b 11})
-
-(defn convertNoteToMIDI
-  "Converts a note in the form {:pitch :b, :accidental :none, :duration 4, :octave 2}
-   to {:note 47 :duration 4}"
-  [note]
-  (let [pitch (:pitch note)
-        octave (:octave note)
-        accidental (:accidental note)
-        duration (:duration note)]
-    (cond
-      (= accidental :none) {:note (+ (* (inc octave) 12) (pitch midiTable)) :duration duration}
-      (= accidental :flat) {:note (+ (* (inc octave) 12) (dec (pitch midiTable))) :duration duration}
-      (= accidental :sharp) {:note (+ (* (inc octave) 12) (inc (pitch midiTable))) :duration duration})))
-
-(defn convertMelodyToMIDI [melody]
-  (vec (map (fn [x] (convertNoteToMIDI x)) melody)))
-
-(def hcb (convertMelodyToMIDI [{:pitch :b, :accidental :none, :duration 4, :octave 2},
-                               {:pitch :a, :accidental :flat, :duration 4, :octave 2},
-                               {:pitch :g, :accidental :sharp, :duration 2, :octave 2},
-                               {:pitch :b, :accidental :sharp, :duration 4, :octave 2},
-                               {:pitch :a, :accidental :flat, :duration 4, :octave 4},
-                               {:pitch :g, :accidental :none, :duration 2, :octave 4},
-                               {:pitch :g, :accidental :none, :duration 8, :octave 4},
-                               {:pitch :g, :accidental :none, :duration 8, :octave 3},
-                               {:pitch :g, :accidental :sharp, :duration 8, :octave 3},
-                               {:pitch :g, :accidental :none, :duration 8, :octave 3},
-                               {:pitch :a, :accidental :flat, :duration 8, :octave 4},
-                               {:pitch :a, :accidental :none, :duration 8, :octave 4},
-                               {:pitch :a, :accidental :none, :duration 8, :octave 4},
-                               {:pitch :a, :accidental :none, :duration 8, :octave 4},
-                               {:pitch :b, :accidental :none, :duration 4, :octave 4},
-                               {:pitch :a, :accidental :none, :duration 4, :octave 4},
-                               {:pitch :g, :accidental :none, :duration 2, :octave 4}]))
-
-
-;;testing
-
-;;TODO: check if note is sharp or flat 
-(defn isSharp
-  "Check if note is a sharp"
-  [accidental]
-  (= :sharp (:accidental accidental)))
-
-(defn isFlat
-  "Check if note is a flat"
-  [accidental]
-  (= :flat (:accidental accidental)))
-
 (defn isRest
   "Check if note is a rest note"
   [note]
@@ -129,6 +73,27 @@
       (recur (dec notesLeft) (conj melody {:note (getRandomNote)
                                            :duration (getRandomNoteSize)})))))
 
+(defn totalError
+  "Normalizes all cases of an individual's error"
+  [maxErrors errors]
+  (loop [maxErrLeft maxErrors
+         errorsLeft errors
+         normalized []]
+    (if (empty? errorsLeft)
+      (reduce + normalized)
+      (let [max-val (first maxErrors)]
+        (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized (/ (first errorsLeft) max-val)))))))
+
+(defn findMax
+  "Find maximum error for each case"
+  [pop c]
+  (loop [cases (range (count c))
+         maxErrors []]
+    (if (empty? cases)
+      maxErrors
+      (let [maxErr (apply max (map #(nth % (first cases)) (map :errors pop)))]
+        (recur (rest cases) (conj maxErrors maxErr))))))
+
 (defn errors
   "Calculate errors for a given genome"
   [genome cases]
@@ -142,6 +107,12 @@
   (let [genome (getNewGenome numNotes)]
     {:genome genome
      :errors (errors genome cases)}))
+
+(defn getNewPopulation
+  [popsize numnotes cases]
+  (let [pop (repeatedly popsize #(getNewIndividual numnotes cases))
+        maxErrs (findMax pop cases)]
+    (map #(assoc % :totalError (totalError maxErrs (:errors %))) pop)))
 
 (defn playFromFile [filepath]
   (play (:genome (read-string (slurp filepath)))))
@@ -241,12 +212,12 @@
 (defn distanceError
   "Punishes total distance from the average note"
   [genome]
-  (reduce + (map #(abs (- % (averageNote genome))) (filter #(not= (:note %) -1) (for [x genome] (get x :note))))))
+  (reduce + (map #(abs (- % (averageNote genome))) (filter #(not= % -1) (for [x genome] (get x :note))))))
 
 (defn variationError
-  "Reward some large variation"
+  "Punishes a small variation"
   [genome]
-  (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note))))))
+  (/ 1 (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note)))))))
 
 (defn distinctNotes
   "Return hashmap with key being a note, and the value as number of times note appears"
@@ -271,8 +242,22 @@
   [i1 i2]
   (< (reduce + (:errors i1)) (reduce + (:errors i2))))
 
-(defn tournamentSelection [pop n]
-  (first (sort better (repeatedly n (rand-nth pop)))))
+(defn betterTotal [i1 i2]
+  (< (:totalError i1) (:totalError i2)))
+
+(defn fittest
+  "Returns the fittest of the given individuals."
+  [pop]
+  (reduce (fn [i1 i2]
+            (if (< (:totalError i1) (:totalError i2))
+              i1
+              i2))
+          pop))
+
+(defn tournamentSelection
+  "Returns an individual selected from population using a tournament."
+  [population]
+  (fittest (repeatedly 2 #(rand-nth population))))
 
 (defn lexicaseSelection [pop]
   (loop [survivors pop
@@ -282,9 +267,11 @@
       (let [minErr (apply min (map #(nth % (first cases)) (map :errors survivors)))]
         (recur (filter #(= minErr (nth (:errors %) (first cases))) survivors) (rest cases))))))
 
-(defn select [pop]
-  (lexicaseSelection pop))
-
+(defn select [pop selection]
+  (cond
+    (= selection :lexicase) (lexicaseSelection pop)
+    (= selection :tournament) (tournamentSelection pop)))
+  
 (defn crossover [p1 p2]
   (loop [newGenome []
          i 0]
@@ -331,43 +318,48 @@
                 note))
             genome)))
 
-(defn makeChild [pop cases]
-  (let [parent1 (:genome (select pop))
-        parent2 (:genome (select pop))
+(defn makeChild [pop cases selection]
+  (let [parent1 (:genome (select pop selection))
+        parent2 (:genome (select pop selection))
         newGenome (mutate (crossover parent1 parent2) 0.01)]
     {:genome newGenome
      :errors (errors newGenome cases)}))
 
-(defn run [popsize numgen numnotes cases]
+(defn run [popsize numgen numnotes cases selection]
   (loop [curGen 0
-         pop (sort better (repeatedly popsize #(getNewIndividual numnotes cases)))]
-    (let [best (first (sort better pop))]
-      (println "GEN: " curGen ", ERROR: " (reduce + (:errors best)) ", " (nth (:errors best) 0))
+         pop (getNewPopulation popsize  numnotes cases)]
+    (let [best (first (sort betterTotal pop))]
+      (println "GEN: " curGen ", ERROR: " (:totalError best))
       (if (= curGen numgen)
         best
-        (recur (inc curGen) (conj (repeatedly (- popsize 1) #(makeChild pop cases)) best))))))
+        (let [newPop (conj (repeatedly (- popsize 1) #(makeChild pop cases selection)) best)
+              maxErrs (findMax pop cases)]
+          (recur (inc curGen) 
+                 (map #(assoc % :totalError (totalError maxErrs (:errors %))) newPop)))))))
 
 (defn readBachDataset []
   (map read-string (clojure.string/split-lines (slurp "melodies.txt"))))
 
 (def cases [restError rhythmicCoherenceError
             melodyPatternError distanceError
-            variationError octaveChangeError])
+            variationError octaveChangeError
+            diversityError])
 
 ;; Generate random melody and to show improvement of our algorithm
 
 ;; ;; Run experiment with different parameters
 
-;; (for [popsize [50 100 200]
-;;       numgen [50 100 200]
-;;       numnotes [20 30 50]]
-;;   (loop [i 0]
-;;     (let [fileName (str "file_" popsize "_" numgen "_" numnotes "_" i ".txt")]
-;;       (println fileName)
-;;       (if (< i 3)
-;;         (do
-;;           (spit fileName (run popsize numgen numnotes cases))
-;;           (recur (inc i)))))))
+(for [popsize [50 100 200]
+      numgen [50 100 200]
+      numnotes [20 30 50]
+      selection [:tournament :lexicase]]
+  (loop [i 0]
+    (let [fileName (str (name selection)"_" popsize "_" numgen "_" numnotes "_" i ".txt")]
+      (println fileName)
+      (if (< i 1)
+        (do
+          (spit fileName (run popsize numgen numnotes cases selection))
+          (recur (inc i)))))))
 
 ;; Play melodies that sound good - what parameters
 (playFromFile "file_200_200_30_2.txt") ;;Sounds good
@@ -397,5 +389,6 @@
             (pauseTime secondsToWait)
             (recur (inc i))))))))
 
-(playAllFiles)
+(spit "demo.txt" (run 100 100 20 cases :lexicase))
+(playFromFile "demo.txt")
 
