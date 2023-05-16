@@ -1,4 +1,5 @@
-(ns music.demo)
+(ns music.demo
+  (:require [clojure.java.shell :as shell]))
 ;;This includes code from all three documes for easy of running during the presentation
 (require '[alda.core :refer :all])
 
@@ -369,6 +370,32 @@
 ;;           (recur (inc i)))))))
 
 ;; Play melodies that sound good - what parameters
-(playFromFile "file_200_200_50_2.txt")
+(playFromFile "file_200_200_30_2.txt") ;;Sounds good
+(playFromFile "file_200_200_50_1.txt") ;;Converges to single note
+(playFromFile "file_200_200_50_0.txt") ;;also sounds good
 
+(defn pauseTime 
+  "Prevents overlap of multiple files being played at the same time"
+  [x]
+  (Thread/sleep (* x 1000)))
+
+(defn playAllFiles
+  "Plays all the generated files"
+  []
+  (for [popsize [50 100 200]
+        numgen [50 100 200]
+        numnotes [20 30 50]]
+    (loop [i 0]
+      (let [fileName (str "file_" popsize "_" numgen "_" numnotes "_" i ".txt")
+            secondsToWait (cond (= numnotes 20) 14
+                                (= numnotes 30) 17
+                                (= numnotes 50) 22)]
+        (println fileName)
+        (if (< i 3)
+          (do
+            (playFromFile fileName)
+            (pauseTime secondsToWait)
+            (recur (inc i))))))))
+
+(playAllFiles)
 
