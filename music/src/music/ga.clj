@@ -5,7 +5,8 @@
 
 (def cases [restError rhythmicCoherenceError 
             melodyPatternError distanceError 
-            variationError octaveChangeError])
+            variationError octaveChangeError
+            diversityError])
 
 (defn better
   [i1 i2]
