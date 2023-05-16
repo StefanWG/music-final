@@ -8,8 +8,10 @@
          normalized []]
     (if (empty? errorsLeft)
       (reduce + normalized)
-      (let [max-val (first maxErrors)]
-        (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized (/ (first errorsLeft) max-val)))))))
+      (let [max-val (first maxErrLeft)]
+        (if (= 0 max-val)
+          (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized 0))
+          (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized (/ (first errorsLeft) max-val))))))))
 
 (defn findMax
   "Find maximum error for each case"

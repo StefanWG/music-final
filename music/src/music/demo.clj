@@ -5,7 +5,10 @@
 (require '[music.core :refer :all])
 (require '[music.ga :refer :all])
 
-
+(def cases [restError rhythmicCoherenceError
+            melodyPatternError distanceError
+            variationError octaveChangeError
+            diversityError])
 ;; Generate random melody and to show improvement of our algorithm
 
 ;; ;; Run experiment with different parameters

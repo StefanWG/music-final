@@ -159,8 +159,3 @@
           (recur (inc curGen)
                  (map #(assoc % :totalError (totalError maxErrs (:errors %))) newPop)))))))
 
-
-(def cases [restError rhythmicCoherenceError
-            melodyPatternError distanceError
-            variationError octaveChangeError
-            diversityError])
