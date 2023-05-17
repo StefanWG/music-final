@@ -1,2 +1,1 @@
-{:deps {io.djy/alda-clj {:mvn/version "LATEST"} 
-        org.clojars.mrdimosthenis/clj-synapses {:mvn/version "1.0.3"}}}
+{:deps {io.djy/alda-clj {:mvn/version "LATEST"} org.clojars.mrdimosthenis/clj-synapses {:mvn/version "1.0.3"}}}
