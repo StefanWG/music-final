@@ -12,8 +12,12 @@
 ;; model.add (Dense (1, activation='sigmoid'))
 ;; model.compile (optimizer='adam', loss='binary_crossentropy', metrics= ['accuracy'])
 
+(defn changeFormat [ind]
+  [(vec (map (fn [g] (:note g)) (:genome ind))) [(:feedback ind)]])
+
 (defn readBachDataset []
-  (map read-string (clojure.string/split-lines (slurp "melodies.txt"))))
+  (let [melodies (map read-string (clojure.string/split-lines (slurp "melodies.txt")))]
+    (vec (map changeFormat melodies))))
 
 (defn inputNum
   "Finds the input dimension, which is the maximum number of notes in melody from bach dataset"
