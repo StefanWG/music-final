@@ -1,6 +1,7 @@
 (ns music.ga)
 (require '[music.error :refer :all])
 (require '[music.core :refer :all])
+(require '[music.nn :refer :all])
 
 
 (defn getRandomNote []

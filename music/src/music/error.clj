@@ -149,10 +149,16 @@
         totalNotes (count genome)]
     (count (filter #(>= (/ % totalNotes) (/ 2 5)) distinctNoteCounts))))
 
-(defn neuralNet
+(defn formatGenome [genome]
+  (let [mel (vec (map #(:note %) genome))]
+    (into mel (repeat (- 32 (count mel)) 0))))
+
+(defn neuralNetError
   "Use the neural network we coded to evaluate whether the melody is good or bad. 0 is good, 1 is okay, 2 is bad"
   [genome]
-  (net/predict 
-   network 
-   (changeFormat genome 32)
-   ))
+  (let [network (net/json-> (slurp "nn.txt"))
+        formatted (formatGenome genome)]
+    (net/predict
+     network
+     formatted)))
+
