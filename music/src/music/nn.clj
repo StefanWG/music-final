@@ -52,9 +52,8 @@
       (net/->net
    [inpNum (- inpNum (/ inpNum 2)) 3])))
 
-(spit "splitted.txt"(splitBach (readBachDataset) 33);; How do I use leaky-re-lu?
-);; What should the weights be? 
-(slurp "splitted.txt")
+;; How do I use leaky-re-lu?
+;; What should the weights be? 
 (net/->net
     [(inputNum (readBachDataset)) (- (inputNum (readBachDataset)) (/ (inputNum (readBachDataset)) 2)) 3]
     (fn [_] fun/leaky-re-lu)
@@ -87,6 +86,25 @@
   network
   [0.2 0.6]) ;;has to predict from a melody we feed it into
 
-(def bach (read-string (slurp "splitted.txt")))
-(first bach)
-(inputNum bach)
+
+(def bach (splitBach (readBachDataset) 3333))
+
+(def shuffled (shuffle bach))
+(def training (take (* (/ (count bach) 3) 2) shuffled))
+(def testing-d (take-last (/ (count bach) 2) shuffled))
+(def network
+  (let [b bach
+        inpNum (inputNum b)]
+    (net/->net
+     [inpNum inpNum 1])))
+(reduce
+ (fn [acc [xs ys]]
+   (net/fit acc 0.1 xs ys))
+ network
+ training)
+
+(/ (reduce + (map #(abs (- (first %) (second %))) 
+     (map (fn [mel] 
+            [(first (net/predict network (nth mel 0))) (first (nth mel 1))]) 
+          testing-d))) (count testing-d))
+
