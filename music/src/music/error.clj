@@ -9,7 +9,7 @@
     (if (empty? errorsLeft)
       (reduce + normalized)
       (let [max-val (first maxErrLeft)]
-        (if (= 0 max-val)
+        (if (or (= 0 max-val) (= 0.0 max-val))
           (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized 0))
           (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized (/ (first errorsLeft) max-val))))))))
 
