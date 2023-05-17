@@ -1,4 +1,9 @@
-(ns music.error)
+(ns music.error
+  (:require [clojure.test :refer :all]
+            [clj-synapses.net :as net]
+            [clj-synapses.fun :as fun])
+  (:import (java.util Random)))
+(require '[music.nn :refer :all])
 
 (defn totalError
   "Normalizes all cases of an individual's error"
@@ -143,3 +148,11 @@
   (let [distinctNoteCounts (vals (distinctNotes genome))
         totalNotes (count genome)]
     (count (filter #(>= (/ % totalNotes) (/ 2 5)) distinctNoteCounts))))
+
+(defn neuralNet
+  "Use the neural network we coded to evaluate whether the melody is good or bad. 0 is good, 1 is okay, 2 is bad"
+  [genome]
+  (net/predict 
+   network 
+   (changeFormat genome 32)
+   ))
