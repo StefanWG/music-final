@@ -108,8 +108,10 @@
 (defn averageNote
   "Calculates the average note of the melody (add all numerical rep of notes / number of notes in melody)"
   [genome]
-  (/ (reduce + (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (count (filter #(not= (:note %) -1) genome))))
-
+  (let [denom (count (filter #(not= (:note %) -1) genome))]
+    (if (<= denom 0)
+      0
+      (/ (reduce + (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) denom))))
 (defn distanceError
   "Punishes total distance from the average note"
   [genome]
@@ -118,7 +120,10 @@
 (defn variationError
   "Punishes a small variation"
   [genome]
-  (/ 1 (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note)))))))
+  (let [denom (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note)))))]  
+    (if (or (= 0 denom) (= 0.0 denom))
+      0
+      (/ 1 denom))))
 
 (defn distinctNotes
   "Return hashmap with key being a note, and the value as number of times note appears"
