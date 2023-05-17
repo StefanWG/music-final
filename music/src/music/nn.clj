@@ -52,7 +52,7 @@
       (apply max numNotes)
       (recur (rest melody) (conj numNotes (count (nth (first melody) 0)))))))
 
-(defn getNN []
+(defn getNN [fp]
   (let [bach (splitBach (readBachDataset) 3333)
         shuffled (shuffle bach)
         network (net/->net
@@ -63,35 +63,35 @@
          (net/fit acc 0.2 xs ys))
        network
        shuffled)
-      network)))
+      (spit fp (net/->json 
+       network)))))
 
+;; ;;TESTING NEURAL NET
+;; (def bach (splitBach (readBachDataset) 3333))
+;; (def shuffled (shuffle bach))
+;; (def training (take (* (/ (count bach) 3) 2) shuffled))
+;; (def testing-d (take-last (/ (count bach) 2) shuffled))
 
-;;TESTING NEURAL NET
-(def bach (splitBach (readBachDataset) 3333))
-(def shuffled (shuffle bach))
-(def training (take (* (/ (count bach) 3) 2) shuffled))
-(def testing-d (take-last (/ (count bach) 2) shuffled))
+;; (def network
+;;   (net/->net
+;;    [(inputNum bach) (inputNum bach) 1]))
 
-(def network
-  (net/->net
-   [(inputNum bach) (inputNum bach) 1]))
+;; (reduce
+;;  (fn [acc [xs ys]]
+;;    (net/fit acc 0.2 xs ys))
+;;  network
+;;  training)
 
-(reduce
- (fn [acc [xs ys]]
-   (net/fit acc 0.2 xs ys))
- network
- training)
+;; (map (fn [mel] [(net/predict network (first mel)) (second mel)]) testing-d)
+;; ;; AVG absolute error
+;; (/ (reduce + (map #(abs (- (first %) (second %)))
+;;                   (map (fn [mel]
+;;                          [(first (net/predict network (nth mel 0))) (first (nth mel 1))])
+;;                        testing-d))) (count testing-d))
+;; ;; AVG squared error
+;; (/ (reduce + (map #(* (- (first %) (second %)) (- (first %) (second %)))
+;;                   (map (fn [mel]
+;;                          [(first (net/predict network (nth mel 0))) (first (nth mel 1))])
+;;                        testing-d))) (count testing-d))
 
-(map (fn [mel] [(net/predict network (first mel)) (second mel)]) testing-d)
-;; AVG absolute error
-(/ (reduce + (map #(abs (- (first %) (second %)))
-                  (map (fn [mel]
-                         [(first (net/predict network (nth mel 0))) (first (nth mel 1))])
-                       testing-d))) (count testing-d))
-;; AVG squared error
-(/ (reduce + (map #(* (- (first %) (second %)) (- (first %) (second %)))
-                  (map (fn [mel]
-                         [(first (net/predict network (nth mel 0))) (first (nth mel 1))])
-                       testing-d))) (count testing-d))
-
-(readBachDataset)
+;; (readBachDataset)
