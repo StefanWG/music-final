@@ -12,12 +12,30 @@
 ;; model.add (Dense (1, activation='sigmoid'))
 ;; model.compile (optimizer='adam', loss='binary_crossentropy', metrics= ['accuracy'])
 
-(defn changeFormat [ind]
-  [(vec (map (fn [g] (:note g)) (:genome ind))) [(:feedback ind)]])
+(defn changeFormat [ind maxLen]
+  (let [notes  (vec (map (fn [g] (:note g)) (:genome ind)))
+        feed [(:feedback ind)]]
+  [(into notes (repeat (- maxLen (count notes)) 0)) feed]))
 
 (defn readBachDataset []
-  (let [melodies (map read-string (clojure.string/split-lines (slurp "melodies.txt")))]
-    (vec (map changeFormat melodies))))
+  (let [melodies (map read-string (clojure.string/split-lines (slurp "melodies.txt")))
+        maxLen (apply max (map #(count (:genome %)) melodies))
+        formatted (vec (map #(changeFormat % maxLen) melodies))]
+    formatted))
+
+(defn splitBach [bach n]
+  (loop [zeroes []
+        ones []
+        twos []
+        bachLeft bach]
+    (if (= 0 (count bachLeft))
+      (into (into (take n zeroes) (take n ones)) (take n twos))
+      (let [b (first bachLeft)
+            f (nth (nth b 1) 0)]
+        (cond
+          (= 0 f) (recur (conj zeroes b) ones twos (rest bachLeft))
+          (= 1 f) (recur zeroes (conj ones b) twos (rest bachLeft))
+          (= 2 f) (recur zeroes ones (conj twos b) (rest bachLeft)))))))
 
 (defn inputNum
   "Finds the input dimension, which is the maximum number of notes in melody from bach dataset"
@@ -34,7 +52,7 @@
       (net/->net
    [inpNum (- inpNum (/ inpNum 2)) 3])))
 
-
+(readBachDataset)
 ;; How do I use leaky-re-lu?
 ;; What should the weights be? 
 
