@@ -43,8 +43,8 @@
   (loop [melody bach
          numNotes []]
     (if (empty? melody)
-      (max numNotes)
-      (recur (rest melody) (conj numNotes (count (filter #(:note %) (first melody))))))))
+      (apply max numNotes)
+      (recur (rest melody) (conj numNotes (count (nth (first melody) 0)))))))
 
 (def network
   (let [bach (readBachDataset)
@@ -52,10 +52,9 @@
       (net/->net
    [inpNum (- inpNum (/ inpNum 2)) 3])))
 
-(readBachDataset)
-;; How do I use leaky-re-lu?
-;; What should the weights be? 
-
+(spit "splitted.txt"(splitBach (readBachDataset) 33);; How do I use leaky-re-lu?
+);; What should the weights be? 
+(slurp "splitted.txt")
 (net/->net
     [(inputNum (readBachDataset)) (- (inputNum (readBachDataset)) (/ (inputNum (readBachDataset)) 2)) 3]
     (fn [_] fun/leaky-re-lu)
@@ -87,3 +86,7 @@
 (net/predict
   network
   [0.2 0.6]) ;;has to predict from a melody we feed it into
+
+(def bach (read-string (slurp "splitted.txt")))
+(first bach)
+(inputNum bach)
