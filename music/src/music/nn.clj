@@ -29,8 +29,11 @@
       (recur (rest melody) (conj numNotes (count (filter #(:note %) (first melody))))))))
 
 (def network
-  (net/->net
-   [(inputNum (readBachDataset)) (- (inputNum (readBachDataset)) (/ (inputNum (readBachDataset)) 2)) 3]))
+  (let [bach (readBachDataset)
+        inpNum (inputNum bach)]
+      (net/->net
+   [inpNum (- inpNum (/ inpNum 2)) 3])))
+
 
 ;; How do I use leaky-re-lu?
 ;; What should the weights be? 
