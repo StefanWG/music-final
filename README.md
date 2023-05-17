@@ -2,7 +2,7 @@
 
 An evolutionary algorithm that generates a melody, with capacity for playback.
 
-##Installation
+## Installation
 
 Install alda and alda-player in the root directory for playback of melodies.
 
