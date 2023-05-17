@@ -15,7 +15,7 @@
 (defn changeFormat [ind maxLen]
   (let [notes  (vec (map (fn [g] (:note g)) (:genome ind)))
         feed [(:feedback ind)]]
-  [(into notes (repeat (- maxLen (count notes)) 0)) feed]))
+    [(into notes (repeat (- maxLen (count notes)) 0)) feed]))
 
 (defn readBachDataset []
   (let [melodies (map read-string (clojure.string/split-lines (slurp "melodies.txt")))
@@ -25,9 +25,9 @@
 
 (defn splitBach [bach n]
   (loop [zeroes []
-        ones []
-        twos []
-        bachLeft bach]
+         ones []
+         twos []
+         bachLeft bach]
     (if (= 0 (count bachLeft))
       (into (into (take n zeroes) (take n ones)) (take n twos))
       (let [b (first bachLeft)
@@ -36,6 +36,12 @@
           (= 0 f) (recur (conj zeroes b) ones twos (rest bachLeft))
           (= 1 f) (recur zeroes (conj ones b) twos (rest bachLeft))
           (= 2 f) (recur zeroes ones (conj twos b) (rest bachLeft)))))))
+
+(defn bachOfLengthN [n]
+  (let [melodies (map read-string (clojure.string/split-lines (slurp "melodies.txt")))
+        formatted (vec (map #(changeFormat % (count %)) melodies))]
+    (filter #(= n (count (first %))) formatted)))
+(map read-string (clojure.string/split-lines (slurp "melodies.txt")))
 
 (defn inputNum
   "Finds the input dimension, which is the maximum number of notes in melody from bach dataset"
@@ -46,65 +52,46 @@
       (apply max numNotes)
       (recur (rest melody) (conj numNotes (count (nth (first melody) 0)))))))
 
-(def network
-  (let [bach (readBachDataset)
-        inpNum (inputNum bach)]
-      (net/->net
-   [inpNum (- inpNum (/ inpNum 2)) 3])))
-
-;; How do I use leaky-re-lu?
-;; What should the weights be? 
-(net/->net
-    [(inputNum (readBachDataset)) (- (inputNum (readBachDataset)) (/ (inputNum (readBachDataset)) 2)) 3]
-    (fn [_] fun/leaky-re-lu)
-    (fn [_] (rand)))
-
-;; (def network
-;;   (net/json->
-;;     "[[{\"activationF\" : \"leaky-re-lu\", \"weights\" : [-0.5,0.1,0.8]},
-;;        {\"activationF\" : \"leaky-re-lu\", \"weights\" : [0.7,0.6,-0.1]},
-;;       [{\"activationF\" : \"sigmoid\", \"weights\" : [0.5,-0.3,-0.4,-0.5]}]]"))
-
-(reduce
- (fn [acc [xs ys]]
-   (net/fit acc 0.1 xs ys))
- net
- [[[0.2 0.6] [0.9]]
-  [[0.1 0.8] [0.2]]
-  [[0.5 0.4] [0.6]]])
-
-;; (net/fit
-;;  net
-;;  0.1
-;;  [0.2 0.6]
-;;  [0.9])
-
-(net/->svg
- custom-network)
-
-(net/predict
-  network
-  [0.2 0.6]) ;;has to predict from a melody we feed it into
+(defn getNN []
+  (let [bach (splitBach (readBachDataset) 3333)
+        shuffled (shuffle bach)
+        network (net/->net
+                 [32 32 1])]
+    (do 
+      (reduce
+       (fn [acc [xs ys]]
+         (net/fit acc 0.2 xs ys))
+       network
+       shuffled)
+      network)))
 
 
+;;TESTING NEURAL NET
 (def bach (splitBach (readBachDataset) 3333))
-
 (def shuffled (shuffle bach))
 (def training (take (* (/ (count bach) 3) 2) shuffled))
 (def testing-d (take-last (/ (count bach) 2) shuffled))
+
 (def network
-  (let [b bach
-        inpNum (inputNum b)]
-    (net/->net
-     [inpNum inpNum 1])))
+  (net/->net
+   [(inputNum bach) (inputNum bach) 1]))
+
 (reduce
  (fn [acc [xs ys]]
-   (net/fit acc 0.1 xs ys))
+   (net/fit acc 0.2 xs ys))
  network
  training)
 
-(/ (reduce + (map #(abs (- (first %) (second %))) 
-     (map (fn [mel] 
-            [(first (net/predict network (nth mel 0))) (first (nth mel 1))]) 
-          testing-d))) (count testing-d))
+(map (fn [mel] [(net/predict network (first mel)) (second mel)]) testing-d)
+;; AVG absolute error
+(/ (reduce + (map #(abs (- (first %) (second %)))
+                  (map (fn [mel]
+                         [(first (net/predict network (nth mel 0))) (first (nth mel 1))])
+                       testing-d))) (count testing-d))
+;; AVG squared error
+(/ (reduce + (map #(* (- (first %) (second %)) (- (first %) (second %)))
+                  (map (fn [mel]
+                         [(first (net/predict network (nth mel 0))) (first (nth mel 1))])
+                       testing-d))) (count testing-d))
 
+(readBachDataset)
