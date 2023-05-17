@@ -4,14 +4,8 @@
             [clj-synapses.fun :as fun])
   (:import (java.util Random)))
 
-
-;; PYTHON:
-;; model = Sequential ()
-;; model.add (Dense (512, activation='relu', input_dim=3))
-;; model.add (Dense (512, activation='relu'))
-;; model.add (Dense (1, activation='sigmoid'))
-;; model.compile (optimizer='adam', loss='binary_crossentropy', metrics= ['accuracy'])
-
+;; Changes the format of the melodies so that it can be fed into the Neural Network. 
+;; Padded with 0s if melody isn't as long as the maximum length
 (defn changeFormat [ind maxLen]
   (let [notes  (vec (map (fn [g] (:note g)) (:genome ind)))
         feed [(:feedback ind)]]
@@ -23,6 +17,7 @@
         formatted (vec (map #(changeFormat % maxLen) melodies))]
     formatted))
 
+;; Splits the dataset into an evaluation of 0, 1, and 2 
 (defn splitBach [bach n]
   (loop [zeroes []
          ones []
@@ -52,6 +47,8 @@
       (apply max numNotes)
       (recur (rest melody) (conj numNotes (count (nth (first melody) 0)))))))
 
+;; NN uses sigmoid function and has an input layer of 32, hidden layer of 32, and output layer of 1 node.
+;; Uses the bach dataset to train the network
 (defn getNN [fp]
   (let [bach (splitBach (readBachDataset) 3333)
         shuffled (shuffle bach)
