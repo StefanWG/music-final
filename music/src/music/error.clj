@@ -1,8 +1,29 @@
 (ns music.error)
-(require '[music.core :refer :all])
 
+(defn totalError
+  "Normalizes all cases of an individual's error"
+  [maxErrors errors]
+  (loop [maxErrLeft maxErrors
+         errorsLeft errors
+         normalized []]
+    (if (empty? errorsLeft)
+      (reduce + normalized)
+      (let [max-val (first maxErrLeft)]
+        (if (= 0 max-val)
+          (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized 0))
+          (recur (rest maxErrLeft) (rest errorsLeft) (conj normalized (/ (first errorsLeft) max-val))))))))
 
-(defn octaveChangeError 
+(defn findMax
+  "Find maximum error for each case"
+  [pop c]
+  (loop [cases (range (count c))
+         maxErrors []]
+    (if (empty? cases)
+      maxErrors
+      (let [maxErr (apply max (map #(nth % (first cases)) (map :errors pop)))]
+        (recur (rest cases) (conj maxErrors maxErr))))))
+
+(defn octaveChangeError
   "Returns the error due to large difference between consecutive notes"
   [genome]
   (let [len (count genome)]
@@ -12,7 +33,7 @@
         (max 0 (- (/ numChanges len) 0.02))
         (recur (+ numChanges (Math/floorDiv (abs (- (first notes) (second notes))) 12)) (rest notes))))))
 
-(defn restError 
+(defn restError
   "Returns the number of rests in the melody (more rests means more error)"
   [genome]
   ;;Could be easily modified to include the length of rests with a 
@@ -21,7 +42,7 @@
         error (- (/ numRests (count genome)) 0.25)]
     (max 0 error)))
 
-(defn getDiffs 
+(defn getDiffs
   "Returns the size of the jumps in a pattern in the melody"
   [pattern]
   (loop [x pattern
@@ -38,14 +59,11 @@
   (loop [notes (map #(:note %) genome)
          patterns []]
     (if (< (count notes) n)
-      (vals (frequencies patterns))
+      (vec (vals (frequencies patterns)))
+    ;;   (vec (vals (frequencies patterns)))
       (recur (rest notes) (conj patterns (getDiffs (take n notes))))))) ;;remove getDiffs for the same notes, get diffs uses jumps of same sizes
 
-
-(defn avg [coll]
-  (/ (reduce + coll) (count coll)))
-
-(defn melodyPatternError 
+(defn melodyPatternError
   "Returns the error from patterns in the melody - there is a larger error if there 
    are fewer patterns"
   [genome]
@@ -83,7 +101,7 @@
          accruedLength 0]
     (let [curr (first noteLengths)]
       (cond
-        (empty? noteLengths) (apply + (map #(- % 1) (filter (complement #{0 1}) (map #(int %)(conj error (quot accruedLength 4))))))
+        (empty? noteLengths) (apply + (map #(- % 1) (filter (complement #{0 1}) (map #(int %) (conj error (quot accruedLength 4))))))
         (= 0 (mod (+ curr accruedLength) 4)) (recur (rest noteLengths) (conj error (quot accruedLength 4)) 0)
         :else (recur (rest noteLengths) error (+ curr accruedLength))))))
 
@@ -95,12 +113,12 @@
 (defn distanceError
   "Punishes total distance from the average note"
   [genome]
-  (reduce + (map #(abs (- % (averageNote genome))) (filter #(not= (:note %) -1) (for [x genome] (get x :note))))))
+  (reduce + (map #(abs (- % (averageNote genome))) (filter #(not= % -1) (for [x genome] (get x :note))))))
 
 (defn variationError
-  "Reward some large variation"
+  "Punishes a small variation"
   [genome]
-  (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note))))))
+  (/ 1 (- (apply max (filter #(not= (:note %) -1) (for [x genome] (get x :note)))) (apply min (filter #(not= (:note %) -1) (for [x genome] (get x :note)))))))
 
 (defn distinctNotes
   "Return hashmap with key being a note, and the value as number of times note appears"
